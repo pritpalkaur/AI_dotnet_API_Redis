@@ -1,0 +1,41 @@
+@host = http://localhost:5170
+
+### Insert a product
+POST {{host}}/api/products
+Content-Type: application/json
+
+{
+  "sku": "KB-001",
+  "name": "Mechanical Keyboard",
+  "description": "87-key, brown switches",
+  "category": "Peripherals",
+  "price": 89.99,
+  "quantity": 25
+}
+
+### List products (call twice: X-Cache goes MISS -> HIT)
+GET {{host}}/api/products?page=1&pageSize=20
+
+### Filter by category
+GET {{host}}/api/products?category=Peripherals
+
+### Get one product
+GET {{host}}/api/products/1
+
+### Update a product
+PUT {{host}}/api/products/1
+Content-Type: application/json
+
+{
+  "name": "Mechanical Keyboard (TKL)",
+  "description": "87-key, brown switches",
+  "category": "Peripherals",
+  "price": 79.99,
+  "quantity": 30
+}
+
+### Delete a product
+DELETE {{host}}/api/products/1
+
+### Health
+GET {{host}}/health

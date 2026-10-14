@@ -1,0 +1,44 @@
+# Copy .env.example to .env and fill in your SQL credentials (.env is git-ignored), then:
+#   docker compose up -d --build
+#   API + Swagger:   http://localhost:8080/swagger
+#   Redis web UI:    http://localhost:8081
+#
+# The API uses the SQL Server on your machine (host.docker.internal:1433, SQL authentication).
+# To use a SQL Server container instead: docker compose --profile sql up -d --build
+# and in .env set SQL_HOST=sqlserver, SQL_USER=sa, SQL_PASSWORD=<MSSQL_SA_PASSWORD>.
+services:
+  api:
+    build: ./src/ProductApi
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__SqlServer: "Server=${SQL_HOST:-host.docker.internal},1433;Database=ProductDb;User Id=${SQL_USER:?set SQL_USER in .env};Password=${SQL_PASSWORD:?set SQL_PASSWORD in .env};TrustServerCertificate=True"
+      ConnectionStrings__Redis: "redis:6379,abortConnect=false,connectTimeout=2000,syncTimeout=2000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7.4-alpine
+    ports:
+      - "6379:6379"
+
+  redis-ui:
+    image: rediscommander/redis-commander:latest
+    environment:
+      REDIS_HOSTS: "local:redis:6379"
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    profiles: ["sql"]
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:-}"
+    ports:
+      - "1433:1433"
